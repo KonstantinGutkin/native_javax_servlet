@@ -1,0 +1,48 @@
+table {
+    border-collapse: collapse;
+    width: 100%;
+}
+
+.parts td, .parts th {
+    border: 1px solid #c5c5c5;
+}
+
+th {
+    background-color: #cbcbff;
+}
+
+.part-name {
+    width: 35%;
+}
+
+.vendor {
+    width: 30%;
+}
+
+.text-center {
+    text-align: center;
+}
+
+.filter td:first-child {
+    width: 20%;
+    font-weight: bold;
+}
+
+.filter td {
+    border-bottom: 1px dashed #c5c5c5;
+}
+
+.filter th {
+    text-align: left;
+    font-weight: normal;
+}
+
+table.filter {
+    border: 1px solid #c5c5c5;
+}
+
+.filter-btn {
+    width: 80px;
+    margin: 3px 0;
+    background-color: #c7c7ff;
+}
