@@ -7,7 +7,7 @@ import java.util.Date;
 
 @Getter
 @Setter
-public class PartFilterDto implements FilterDto {
+public class PartFilterDto extends SortDto {
     private String number;
     private String name;
     private String vendor;

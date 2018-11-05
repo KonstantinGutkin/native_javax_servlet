@@ -24,11 +24,6 @@ public class PartDao {
         connection = JdbcDataSource.getInstance().getConnection();
     }
 
-    @SneakyThrows
-    public List<Part> getParts() {
-        return mapToParts(connection.prepareStatement("SELECT * FROM part").executeQuery());
-    }
-
     private List<Part> mapToParts(ResultSet resultSet) throws SQLException {
         List<Part> parts = new ArrayList<>();
         while (resultSet.next()) {
@@ -45,93 +40,70 @@ public class PartDao {
         return parts;
     }
 
-    public List<Part> getParts(PartFilterDto partFilterDto, SortDto sortDto) throws SQLException {
+    public List<Part> getParts(PartFilterDto partFilterDto) throws SQLException {
         String query = "SELECT * FROM part\n";
-        ConditionQueryParams conditions = getConditions(partFilterDto);
-        if (!conditions.getQuery().isEmpty()) {
-            query += "WHERE " + conditions.getQuery();
+        QueryCondition queryCondition = getConditions(partFilterDto);
+        String conditions = queryCondition.createConjuctionConditions();
+        if (!conditions.isEmpty()) {
+            query += "WHERE " + conditions;
         }
-        query += getOrderClause(sortDto);
+        query += getOrderClause(partFilterDto);
         PreparedStatement preparedStatement = connection.prepareStatement(query);
-        addParams(preparedStatement, conditions.getParams());
+        queryCondition.addConditionValues(preparedStatement);
         return mapToParts(preparedStatement.executeQuery());
     }
 
     private String getOrderClause(SortDto sortDto) {
-        if (sortDto.getField() != null) {
-            return "order by " + sortDto.getField() + " " + sortDto.getOrder();
+        if (sortDto.getSortField() != null) {
+            // fixme SQLi
+            return "order by " + sortDto.getSortField() + " " + sortDto.getSortOrder();
         }
         return "";
     }
-    private PreparedStatement addParams(PreparedStatement preparedStatement, Object[] params) throws SQLException {
-        int i = 1;
-        for (Object param : params) {
-            if (param instanceof String) {
-                preparedStatement.setString(i++, "%" + param + "%");
-            } else if (param instanceof Integer) {
-                preparedStatement.setInt(i++, (Integer) param);
-            } else if (param instanceof Date) {
-                preparedStatement.setDate(i++, new java.sql.Date(((Date) param).getTime()));
+
+
+    private QueryCondition getConditions(PartFilterDto partFilterDto) {
+        QueryCondition queryCondition = new QueryCondition();
+        queryCondition.add("name LIKE ?", partFilterDto.getName());
+        queryCondition.add("number LIKE ?", partFilterDto.getNumber());
+        queryCondition.add("vendor LIKE ?", partFilterDto.getVendor());
+        queryCondition.add("qty >= ?", partFilterDto.getQty());
+        queryCondition.add("received > ?", partFilterDto.getReceivedAfter());
+        queryCondition.add("received < ?", partFilterDto.getReceivedBefore());
+        queryCondition.add("shipped > ?", partFilterDto.getShippedAfter());
+        queryCondition.add("shipped < ?", partFilterDto.getShippedBefore());
+        return queryCondition;
+    }
+
+    private class QueryCondition {
+
+        private List<String> params = new ArrayList<>();
+        private List<Object> values = new ArrayList<>();
+
+        public void add(String param, Object value) {
+            if (param != null && value != null) {
+                params.add(param);
+                values.add(value);
             }
         }
-        return preparedStatement;
-    }
 
-    private ConditionQueryParams getConditions(PartFilterDto partFilterDto) {
-        int length = partFilterDto.getClass().getDeclaredFields().length;
-        List<String> conditions = new ArrayList<>(length);
-        Object[] params = new Object[length];
-        int i = 0;
-
-        if (partFilterDto.getName() != null) {
-            conditions.add("name LIKE ?");
-            params[i++] = partFilterDto.getName();
-        }
-        if (partFilterDto.getNumber() != null) {
-            conditions.add("number LIKE ?");
-            params[i++] = partFilterDto.getNumber();
-        }
-        if (partFilterDto.getVendor() != null) {
-            conditions.add("vendor LIKE ?");
-            params[i++] = partFilterDto.getVendor();
-        }
-        if (partFilterDto.getQty() != null) {
-            conditions.add("qty >= ?");
-            params[i++] = partFilterDto.getQty();
-        }
-        if (partFilterDto.getReceivedAfter() != null) {
-            conditions.add("received > ?");
-            params[i++] = partFilterDto.getReceivedAfter();
-        }
-        if (partFilterDto.getReceivedBefore() != null) {
-            conditions.add("received < ?");
-            params[i++] = partFilterDto.getReceivedBefore();
-        }
-        if (partFilterDto.getShippedAfter() != null) {
-            conditions.add("shipped > ?");
-            params[i++] = partFilterDto.getShippedAfter();
-        }
-        if (partFilterDto.getShippedBefore() != null) {
-            conditions.add("shipped < ?");
-            params[i] = partFilterDto.getShippedBefore();
-        }
-        return ConditionQueryParams.of(String.join(" AND ", conditions), params);
-    }
-
-
-    @Getter
-    private static class ConditionQueryParams {
-
-        private String query;
-        private Object[] params;
-
-        private ConditionQueryParams(String query, Object[] params) {
-            this.query = query;
-            this.params = params;
+        public String createConjuctionConditions() {
+            return String.join(" AND ", params);
         }
 
-        public static ConditionQueryParams of(String query, Object[] params) {
-            return new ConditionQueryParams(query, params);
+        public PreparedStatement addConditionValues(PreparedStatement preparedStatement) throws SQLException {
+            int i = 1;
+            // fixme SQLi
+            for (Object value : values) {
+                if (value instanceof String) {
+                    preparedStatement.setString(i++, "%" + value + "%");
+                } else if (value instanceof Integer) {
+                    preparedStatement.setInt(i++, (Integer) value);
+                } else if (value instanceof Date) {
+                    preparedStatement.setDate(i++, new java.sql.Date(((Date) value).getTime()));
+                }
+            }
+            return preparedStatement;
         }
 
     }

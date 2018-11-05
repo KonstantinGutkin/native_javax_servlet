@@ -32,21 +32,16 @@ public class PartServlet extends HttpServlet {
     protected void doGet(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         resp.setContentType("text/html;charset=utf-8");
 
-        req.setAttribute("parts", partDao.getParts());
-        req.getRequestDispatcher("/jsp/part.jsp").forward(req, resp);
-    }
-
-    @Override
-    protected void doPost(HttpServletRequest req, HttpServletResponse resp) throws ServletException, IOException {
         try {
-            req.setAttribute("parts", partDao.getParts(mapToPartFilterDto(req), mapToSortDto(req)));
-            req.setAttribute("sortField", req.getParameter("sortField"));
-            req.setAttribute("sortOrder", req.getParameter("sortOrder"));
+            PartFilterDto partFilterDto = mapToPartFilterDto(req);
+            req.setAttribute("parts", partDao.getParts(partFilterDto));
+            req.setAttribute("partFilter", partFilterDto);
             req.getRequestDispatcher("/jsp/part.jsp").forward(req, resp);
         } catch (SQLException e) {
             log.error("Error when getting parts", e);
         }
     }
+
 
     private PartFilterDto mapToPartFilterDto(HttpServletRequest request) {
         PartFilterDto partFilterDto = new PartFilterDto();
@@ -62,14 +57,9 @@ public class PartServlet extends HttpServlet {
                 getDateParameter(request.getParameter(emptyToNull(request.getParameter("receivedAfter"))))
         );
         partFilterDto.setReceivedBefore(getDateParameter(emptyToNull(request.getParameter("receivedBefore"))));
+        partFilterDto.setSortField(emptyToNull(request.getParameter("sortField")));
+        partFilterDto.setSortOrder(emptyToNull(request.getParameter("sortOrder")));
         return partFilterDto;
-    }
-
-    private SortDto mapToSortDto(HttpServletRequest request) {
-        SortDto sortDto = new SortDto();
-        sortDto.setField(emptyToNull(request.getParameter("sortField")));
-        sortDto.setOrder(emptyToNull(request.getParameter("sortOrder")));
-        return sortDto;
     }
 
     @SneakyThrows

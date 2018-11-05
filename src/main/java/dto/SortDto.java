@@ -6,6 +6,6 @@ import lombok.Setter;
 @Getter
 @Setter
 public class SortDto {
-    private String field;
-    private String order;
+    private String sortField;
+    private String sortOrder;
 }

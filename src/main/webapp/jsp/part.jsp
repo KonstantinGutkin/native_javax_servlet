@@ -1,3 +1,4 @@
+<%--@elvariable id="partFilter" type="dto.PartFilterDto"--%>
 <%@ page contentType="text/html;charset=UTF-8" language="java" %>
 <%@ taglib uri="http://java.sun.com/jsp/jstl/core" prefix="c" %>
 <%@ taglib prefix="fmt" uri="http://java.sun.com/jsp/jstl/fmt"%>
@@ -24,48 +25,48 @@
 </head>
 <body>
 
-<form id="filter-form" action="${pageContext.request.contextPath}/part" method="post" onsubmit="return false">
+<form id="filter-form" action="${pageContext.request.contextPath}/part" method="get">
     <table class="filter">
         <tr>
             <th colspan="2">Filter</th>
         </tr>
         <tr>
             <td>PN</td>
-            <td><input name="number" /></td>
+            <td><input name="number" value="${partFilter.number}"></td>
         </tr>
         <tr>
             <td>Part Name</td>
-            <td><input name="name" /></td>
+            <td><input name="name" value="${partFilter.name}"/></td>
         </tr>
         <tr>
             <td>Vendor</td>
-            <td><input name="vendor" /></td>
+            <td><input name="vendor" value="${partFilter.vendor}"/></td>
         </tr>
         <tr>
             <td>Qty</td>
-            <td><input name="qty" /></td>
+            <td><input name="qty" value="${partFilter.qty}"/></td>
         </tr>
         <tr>
             <td>Shipped</td>
             <td>
                 <span>after</span>
-                <input name="shippedAfter" />
+                <input name="shippedAfter" value="<fmt:formatDate value="${partFilter.shippedAfter}" pattern="MMM dd, yyyy" />">
                 <span>before</span>
-                <input name="shippedBefore" />
+                <input name="shippedBefore" value="<fmt:formatDate value="${partFilter.shippedBefore}" pattern="MMM dd, yyyy" />"/>
             </td>
         </tr>
         <tr>
             <td>Received</td>
             <td>
                 <span>after</span>
-                <input name="receivedAfter" />
+                <input name="receivedAfter" value="<fmt:formatDate value="${partFilter.receivedAfter}" pattern="MMM dd, yyyy" />"/>
                 <span>before</span>
-                <input name="receivedBefore" />
+                <input name="receivedBefore" value="<fmt:formatDate value="${partFilter.receivedBefore}" pattern="MMM dd, yyyy" />"/>
             </td>
         </tr>
     </table>
-    <input type="hidden" id="sortField" name="sortField" value="${sortField}"/>
-    <input type="hidden" id="sortOrder" name="sortOrder" value="${sortOrder}"/>
+    <input type="hidden" id="sortField" name="sortField" value="${partFilter.sortField}"/>
+    <input type="hidden" id="sortOrder" name="sortOrder" value="${partFilter.sortOrder}"/>
     <div class="text-center">
         <input type="submit" class="filter-btn" value="Filter"/>
     </div>
